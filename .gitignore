@@ -75,6 +75,17 @@ typings/
 .out
 .storybook-out
 
+# JetBrains IDE files
+.idea/
+*.iml
+
+# Node modules
+node_modules/
+
+# Lock files (опционально)
+package-lock.json
+
+
 # Temporary folders
 tmp/
 temp/
