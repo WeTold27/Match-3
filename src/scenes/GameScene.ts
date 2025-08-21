@@ -46,7 +46,8 @@ export default class GameScene extends Phaser.Scene {
                 gem.type = gemType;
                 gem.row = row;
                 gem.col = col;
-                
+
+                this.board[row][col] = gem;
             }
         }
     }
