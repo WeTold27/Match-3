@@ -4,7 +4,6 @@ import Phaser from "phaser";
 import GameScene from "./scenes/GameScene";
 import PreloadScene from './scenes/Preload';
 
-debugger
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 730,
