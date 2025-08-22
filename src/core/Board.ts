@@ -1,3 +1,4 @@
+import Phaser from "phaser";
 import Gem from "../entities/Gem";
 
 export default class Board {
@@ -15,6 +16,9 @@ export default class Board {
         this.grid = [];
     }
 
+    getX(col: number) { return col * this.cellSize + this.cellSize / 2; }
+    getY(row: number) { return row * this.cellSize + this.cellSize / 2; }
+
     create(scene: Phaser.Scene) {
         const offsetX = (scene.scale.width - this.cols * this.cellSize) / 2;
         const offsetY = (scene.scale.height - this.rows * this.cellSize) / 2;
@@ -22,24 +26,42 @@ export default class Board {
         for (let row = 0; row < this.rows; row++) {
             this.grid[row] = [];
             for (let col = 0; col < this.cols; col++) {
-                const type = Phaser.Utils.Array.GetRandom(this.gemTypes);
-                const x = offsetX + col * this.cellSize + this.cellSize / 2;
-                const y = offsetY + row * this.cellSize + this.cellSize / 2;
-                this.grid[row][col] = new Gem(scene, x, y, type, row, col);
+                const gem = this.createGem(scene, row, col, offsetX, offsetY);
+                this.grid[row][col] = gem;
             }
         }
+    }
+
+    private createGem(scene: Phaser.Scene, row: number, col: number, offsetX = 0, offsetY = 0): Gem {
+        const type = Phaser.Utils.Array.GetRandom(this.gemTypes);
+        const gem = new Gem(
+            scene,
+            offsetX + this.getX(col),
+            offsetY + this.getY(row) - this.cellSize * 2, // появление сверху
+            type,
+            row,
+            col
+        );
+        scene.tweens.add({
+            targets: gem,
+            y: offsetY + this.getY(row),
+            duration: 300,
+        });
+        return gem;
     }
 
     getGem(row: number, col: number): Gem | null {
         return this.grid[row]?.[col] ?? null;
     }
 
-    swap(g1: Gem, g2: Gem) {
-        [g1.row, g2.row] = [g2.row, g1.row];
-        [g1.col, g2.col] = [g2.col, g1.col];
+    swapGemPositions(gemA: Gem | null, gemB: Gem | null) {
+        if (!gemA || !gemB) return;
 
-        this.grid[g1.row][g1.col] = g1;
-        this.grid[g2.row][g2.col] = g2;
+        [gemA.row, gemB.row] = [gemB.row, gemA.row];
+        [gemA.col, gemB.col] = [gemB.col, gemA.col];
+
+        this.grid[gemA.row][gemA.col] = gemA;
+        this.grid[gemB.row][gemB.col] = gemB;
     }
 
     findMatches(): Gem[][] {
@@ -86,6 +108,41 @@ export default class Board {
         for (const gem of gems) {
             this.grid[gem.row][gem.col] = null;
             gem.destroy();
+        }
+    }
+
+    dropGems(scene: Phaser.Scene) {
+        for (let col = 0; col < this.cols; col++) {
+            for (let row = this.rows - 1; row >= 0; row--) {
+                if (this.grid[row][col] === null) {
+                    // ищем ближайший гем выше
+                    for (let rowAbove = row - 1; rowAbove >= 0; rowAbove--) {
+                        if (this.grid[rowAbove][col] !== null) {
+                            const gem = this.grid[rowAbove][col];
+                            this.grid[row][col] = gem;
+                            this.grid[rowAbove][col] = null;
+
+                            gem.row = row;
+                            scene.tweens.add({
+                                targets: gem,
+                                y: this.getY(row),
+                                duration: 200,
+                            });
+
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Если наверху пустота – создаём новые фишки
+            for (let row = 0; row < this.rows; row++) {
+                if (!this.grid[row][col]) {
+                    const gem = this.createGem(scene, row, col);
+                    this.grid[row][col] = gem;
+                    
+                }
+            }
         }
     }
 }
