@@ -1,9 +1,12 @@
 import Phaser from "phaser";
 import Board from "../core/Board";
+import SwapHandler from "../core/SwapHandler";
+import MatchChecker from "../core/MatchChecker";
 
 export default class GameScene extends Phaser.Scene {
-    private board: Board;
-    private selected: any = null;
+    private board!: Board;
+    private swapHandler!: SwapHandler;
+    private matchChecker!: MatchChecker;
 
 
     constructor() {
@@ -20,6 +23,13 @@ export default class GameScene extends Phaser.Scene {
         ]);
         
         this.board.create(this);
-        
+
+
+        // создаём менеджеров
+        this.matchChecker = new MatchChecker(this, this.board);
+        this.swapHandler = new SwapHandler(this, this.board, this.matchChecker);
+
+        // включаем ввод (клики по гемам)
+        this.swapHandler.enableInput();
     }
 }

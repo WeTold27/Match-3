@@ -1,13 +1,11 @@
 import Gem from "../entities/Gem";
-import Phaser from "phaser";
 
 export default class Board {
     rows: number;
     cols: number;
     cellSize: number;
     gemTypes: string[];
-    grid: Gem[][];
-    private selectedGem: Gem | null = null;
+    grid: (Gem | null)[][];
 
     constructor(rows: number, cols: number, cellSize: number, gemTypes: string[]) {
         this.rows = rows;
@@ -27,50 +25,67 @@ export default class Board {
                 const type = Phaser.Utils.Array.GetRandom(this.gemTypes);
                 const x = offsetX + col * this.cellSize + this.cellSize / 2;
                 const y = offsetY + row * this.cellSize + this.cellSize / 2;
-                const gem = new Gem(scene, x, y, type, row, col);
-
-                // Сразу делаем интерактивным и вешаем обработчик
-                gem.setInteractive();
-                gem.on('pointerdown', () => this.onGemClicked(scene, gem));
-
-                this.grid[row][col] = gem;
+                this.grid[row][col] = new Gem(scene, x, y, type, row, col);
             }
         }
     }
 
-    private onGemClicked(scene: Phaser.Scene, gem: Gem) {
-        if (!this.selectedGem) {
-            this.selectedGem = gem;
-            gem.setScale(1.2);
-        } else {
-            const dx = Math.abs(gem.col - this.selectedGem.col);
-            const dy = Math.abs(gem.row - this.selectedGem.row);
+    getGem(row: number, col: number): Gem | null {
+        return this.grid[row]?.[col] ?? null;
+    }
 
-            if (dx + dy === 1) {
-                // Меняем местами в логике
-                [gem.row, this.selectedGem.row] = [this.selectedGem.row, gem.row];
-                [gem.col, this.selectedGem.col] = [this.selectedGem.col, gem.col];
+    swap(g1: Gem, g2: Gem) {
+        [g1.row, g2.row] = [g2.row, g1.row];
+        [g1.col, g2.col] = [g2.col, g1.col];
 
-                this.grid[gem.row][gem.col] = gem;
-                this.grid[this.selectedGem.row][this.selectedGem.col] = this.selectedGem;
+        this.grid[g1.row][g1.col] = g1;
+        this.grid[g2.row][g2.col] = g2;
+    }
 
-                // Анимация через scene.tweens
-                scene.tweens.add({
-                    targets: gem,
-                    x: this.selectedGem.x,
-                    y: this.selectedGem.y,
-                    duration: 200
-                });
-                scene.tweens.add({
-                    targets: this.selectedGem,
-                    x: gem.x,
-                    y: gem.y,
-                    duration: 200
-                });
+    findMatches(): Gem[][] {
+        const matches: Gem[][] = [];
+
+        // горизонтальные
+        for (let row = 0; row < this.rows; row++) {
+            let streak: Gem[] = [];
+            for (let col = 0; col < this.cols; col++) {
+                const gem = this.getGem(row, col);
+                if (!gem) continue;
+
+                if (streak.length === 0 || streak[0].type === gem.type) {
+                    streak.push(gem);
+                } else {
+                    if (streak.length >= 3) matches.push([...streak]);
+                    streak = [gem];
+                }
             }
+            if (streak.length >= 3) matches.push([...streak]);
+        }
 
-            this.selectedGem.setScale(1);
-            this.selectedGem = null;
+        // вертикальные
+        for (let col = 0; col < this.cols; col++) {
+            let streak: Gem[] = [];
+            for (let row = 0; row < this.rows; row++) {
+                const gem = this.getGem(row, col);
+                if (!gem) continue;
+
+                if (streak.length === 0 || streak[0].type === gem.type) {
+                    streak.push(gem);
+                } else {
+                    if (streak.length >= 3) matches.push([...streak]);
+                    streak = [gem];
+                }
+            }
+            if (streak.length >= 3) matches.push([...streak]);
+        }
+
+        return matches;
+    }
+
+    removeGems(gems: Gem[]) {
+        for (const gem of gems) {
+            this.grid[gem.row][gem.col] = null;
+            gem.destroy();
         }
     }
 }
