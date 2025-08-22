@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import Board from "../board/Board";
+import Board from "../core/Board";
 
 export default class GameScene extends Phaser.Scene {
     private board: Board;
