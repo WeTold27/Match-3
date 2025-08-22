@@ -16,64 +16,57 @@ export default class MatchChecker {
 
         // горизонтали
         for (let row = 0; row < this.board.rows; row++) {
-            let run: Gem[] = [];
-            let lastType: string | null = null;
-
+            let streak: Gem[] = [];
             for (let col = 0; col < this.board.cols; col++) {
                 const gem = this.board.grid[row][col];
                 if (!gem) continue;
 
-                if (gem.type === lastType) {
-                    run.push(gem);
+                if (streak.length === 0 || streak[0].type === gem.type) {
+                    streak.push(gem);
                 } else {
-                    if (run.length >= 3) matches.push(run);
-                    run = [gem];
+                    if (streak.length >= 3) matches.push([...streak]);
+                    streak = [gem];
                 }
-                lastType = gem.type;
             }
-            if (run.length >= 3) matches.push(run);
+            if (streak.length >= 3) matches.push([...streak]);
         }
 
         // вертикали
         for (let col = 0; col < this.board.cols; col++) {
-            let run: Gem[] = [];
-            let lastType: string | null = null;
-
+            let streak: Gem[] = [];
             for (let row = 0; row < this.board.rows; row++) {
-                const gem = this.board.grid[row][col];
+                const gem = this.board.getGem(row, col);
                 if (!gem) continue;
 
-                if (gem.type === lastType) {
-                    run.push(gem);
+                if (streak.length === 0 || streak[0].type === gem.type) {
+                    streak.push(gem);
                 } else {
-                    if (run.length >= 3) matches.push(run);
-                    run = [gem];
+                    if (streak.length >= 3) matches.push([...streak]);
+                    streak = [gem];
                 }
-                lastType = gem.type;
             }
-            if (run.length >= 3) matches.push(run);
+            if (streak.length >= 3) matches.push([...streak]);
         }
 
         return matches;
     }
 
     handleMatches(matches: Gem[][]) {
+        if (matches.length === 0) return;
+
         matches.forEach(group => {
             group.forEach(gem => {
-                this.board.grid[gem.row][gem.col] = null!;
+                this.board.grid[gem.row][gem.col] = null;
                 gem.destroy();
             });
         });
 
-        this.scene.time.delayedCall(250, () => {
+        this.scene.time.delayedCall(200, () => {
             this.board.dropGems(this.scene);
-
-            // после падения снова проверяем
-            this.scene.time.delayedCall(400, () => {
+            
+            this.scene.time.delayedCall(300, () => {
                 const newMatches = this.findMatches();
-                if (newMatches.length > 0) {
-                    this.handleMatches(newMatches);
-                }
+                if (newMatches.length > 0) this.handleMatches(newMatches);
             });
         });
     }

@@ -27,7 +27,7 @@ export default class GameScene extends Phaser.Scene {
 
         // создаём менеджеров
         this.matchChecker = new MatchChecker(this, this.board);
-        this.swapHandler = new SwapHandler(this, this.board);
+        this.swapHandler = new SwapHandler(this, this.board, this.matchChecker);
 
         // включаем ввод (клики по гемам)
         this.swapHandler.enableInput();
