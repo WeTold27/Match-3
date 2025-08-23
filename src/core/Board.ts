@@ -8,11 +8,12 @@ export default class Board {
     gemTypes: string[];
     grid: (Gem | null)[][];
 
-    constructor(rows: number, cols: number, cellSize: number, gemTypes: string[]) {
+    constructor(rows: number, cols: number, cellSize: number, gemTypes: string[], scene: Phaser.Scene) {
         this.rows = rows;
         this.cols = cols;
         this.cellSize = cellSize;
         this.gemTypes = gemTypes;
+        this.scene = scene;
         this.grid = [];
     }
 
@@ -117,12 +118,23 @@ export default class Board {
         return matches;
     }
 
+    private scene: Phaser.Scene;
+    private calculatePoints(matchLength: number): number {
+        if (matchLength < 3) return 0;
+        if (matchLength === 3) return 100;
+        return 100 + (matchLength - 3) * 50;
+    }
+    
     removeGems(gems: Gem[]) {
+        const points = this.calculatePoints(gems.length);
         for (const gem of gems) {
             this.grid[gem.row][gem.col] = null;
             gem.destroy();
         }
+
+        return points;
     }
+    
 
     dropGems(scene: Phaser.Scene) {
         for (let col = 0; col < this.cols; col++) {

@@ -7,8 +7,11 @@ export default class GameScene extends Phaser.Scene {
     private board!: Board;
     private swapHandler!: SwapHandler;
     private matchChecker!: MatchChecker;
-    private scoreText!: Phaser.GameObjects.Text; // для очков
-    private score: number = 0;
+   
+    private ui: {
+        score: number;
+        scoreText: Phaser.GameObjects.Text;
+    } = {} as any;
     
     constructor() {
         super("GameScene");
@@ -23,16 +26,30 @@ export default class GameScene extends Phaser.Scene {
         this.board = new Board(9, 9, 81, [
             "donut", "cracker", "croissant", "cookie", "icecream", "candy", "cake",
             "wrapper", "lollipop", "cupcake", 'star', 'cchups', 'chocolate', 'piececake'
-        ]);
+        ], this);
         
         this.board.create(this);
 
-        this.scoreText = this.add.text(
-            this.board.cols * this.board.cellSize + 20, // справа от поля
-            50,
-            `Score: ${this.score}`,
-            { fontSize: '24px', color: '#ffffff' }
-        );
+        this.ui.score = 0;
+        this.ui.scoreText = this.add.text(
+            this.board.cols * this.board.cellSize + 50, // справа от поля
+           20, // вертикально по центру
+            `Score: \n${this.ui.score}`,
+            {
+                fontSize: '24px',
+                color: '#ffffff',
+                align: 'center'
+            
+            });
+        
+        // this.ui.totalScoreText = this.add.text(
+        //     this.board.cols * this.board.cellSize + 20,
+        //     120, // чуть ниже текущих очков
+        //     `Total Score:\n${this.totalScore}`,
+        //     { fontSize: '24px', color: '#ffffff', align: 'center' }
+        // );
+    
+        
         
         // создаём менеджеров
         this.matchChecker = new MatchChecker(this, this.board);
@@ -42,7 +59,8 @@ export default class GameScene extends Phaser.Scene {
         this.swapHandler.enableInput();
     }
     addScore(points: number) {
-        this.score += points;
-        this.scoreText.setText(`Score: ${this.score}`);
+        this.ui.score += points;
+        this.ui.scoreText.setText(`Score: \n${this.ui.score}`);
+        // this.ui.totalScoreText.setText(`Total Score:\n${this.ui.totalScore}`);
     }
 }
