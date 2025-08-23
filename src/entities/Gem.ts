@@ -14,6 +14,7 @@ export default class Gem extends Phaser.GameObjects.Image {
         this.setInteractive();
         this.setDisplaySize(77, 77);
         scene.add.existing(this);
+        
     }
 
     highlight() {
@@ -23,4 +24,5 @@ export default class Gem extends Phaser.GameObjects.Image {
     resetHighlight() {
         this.setScale(1);
     }
+    
 }

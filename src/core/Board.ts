@@ -7,6 +7,8 @@ export default class Board {
     cellSize: number;
     gemTypes: string[];
     grid: (Gem | null)[][];
+    private offsetX: number = 0;
+    private offsetY: number = 0;
 
     constructor(rows: number, cols: number, cellSize: number, gemTypes: string[], scene: Phaser.Scene) {
         this.rows = rows;
@@ -29,8 +31,8 @@ export default class Board {
         }
     }
 
-    getX(col: number) { return col * this.cellSize + this.cellSize / 2; }
-    getY(row: number) { return row * this.cellSize + this.cellSize / 2; }
+    getX(col: number) { return this.offsetX + col * this.cellSize + this.cellSize / 2; }
+    getY(row: number) { return this.offsetY + row * this.cellSize + this.cellSize / 2; }
 
     create(scene: Phaser.Scene) {
         const uiWidth = 50;
@@ -40,25 +42,25 @@ export default class Board {
         for (let row = 0; row < this.rows; row++) {
             this.grid[row] = [];
             for (let col = 0; col < this.cols; col++) {
-                const gem = this.createGem(scene, row, col, offsetX, offsetY);
+                const gem = this.createGem(scene, row, col);
                 this.grid[row][col] = gem;
             }
         }
     }
-
+    
     private createGem(scene: Phaser.Scene, row: number, col: number, offsetX = 0, offsetY = 0): Gem {
         const type = Phaser.Utils.Array.GetRandom(this.gemTypes);
         const gem = new Gem(
             scene,
-            offsetX + this.getX(col),
-            offsetY + this.getY(row) - this.cellSize * 2, // появление сверху
+            this.getX(col),
+            this.getY(row) - this.cellSize * 2, // появление сверху
             type,
             row,
             col
         );
         scene.tweens.add({
             targets: gem,
-            y: offsetY + this.getY(row),
+            y: this.getY(row),
             duration: 300,
         });
         return gem;
