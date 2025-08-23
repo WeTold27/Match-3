@@ -16,11 +16,24 @@ export default class Board {
         this.grid = [];
     }
 
+    enableInput(swapHandler: any) {
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                const gem = this.grid[row][col];
+                if (!gem) continue;
+                gem.setInteractive();
+                gem.removeAllListeners();
+                gem.on("pointerdown", () => swapHandler.onGemClicked(gem));
+            }
+        }
+    }
+
     getX(col: number) { return col * this.cellSize + this.cellSize / 2; }
     getY(row: number) { return row * this.cellSize + this.cellSize / 2; }
 
     create(scene: Phaser.Scene) {
-        const offsetX = (scene.scale.width - this.cols * this.cellSize) / 2;
+        const uiWidth = 50;
+        const offsetX = (scene.scale.width - this.cols * this.cellSize - uiWidth) / 2 - uiWidth;
         const offsetY = (scene.scale.height - this.rows * this.cellSize) / 2;
 
         for (let row = 0; row < this.rows; row++) {
@@ -146,3 +159,4 @@ export default class Board {
         }
     }
 }
+
