@@ -46,27 +46,15 @@ export default class SwapHandler {
         }
 
         this.swapGems(gem, firstGem, () => {
-            const matches = this.board.findMatches();
-            
-            if (matches.length > 0) {
-                let totalPoints = 0;
-                matches.forEach(group => {
-                    totalPoints += this.board.removeGems(group);
-                });
-
-                (this.scene as any).addScore(totalPoints);
-                
-                this.board.dropGems(this.scene);
-                this.scene.time.delayedCall(this.DELAY_AFTER_DROP, () => { 
+            if (this.board.findMatches().length > 0) {
+                this.board.resolveMatches(this.scene, (this.scene as any).ui).then(() => {
                     const shuffler = new BoardShuffler(this.board, this.scene);
-                if (!shuffler.hasPossibleMoves()) {
-                    shuffler.shuffle();
-                }
-                this.enableInput();
-            });
-                
+                    if (!shuffler.hasPossibleMoves()) {
+                        shuffler.shuffle();
+                    }
+                    this.enableInput();
+                });
             } else {
-                // Откат, если совпадений нет
                 this.swapGems(gem, firstGem);
             }
         });
