@@ -45,18 +45,25 @@ export default class Board {
     }
 
     create(scene: Phaser.Scene) {
-        const uiWidth = 50;
+        const uiWidth = 70;
         this.offsetX = (scene.scale.width - this.cols * this.cellSize - uiWidth) / 2 - uiWidth;
         this.offsetY = (scene.scale.height - this.rows * this.cellSize) / 2;
 
         for (let row = 0; row < this.rows; row++) {
             this.grid[row] = [];
             for (let col = 0; col < this.cols; col++) {
-                const gem = this.createGem(scene, row, col);
+                const gem = new Gem(scene, this.getX(col), this.getY(row) - this.cellSize * 2,
+                    Phaser.Utils.Array.GetRandom(this.gemTypes), row, col);
                 this.grid[row][col] = gem;
+
+                scene.tweens.add({
+                    targets: gem,
+                    y: this.getY(row),
+                    duration: 300
+                });
             }
         }
-        scene.time.delayedCall(10, () => this.resolveMatches(scene, this.ui));
+        scene.time.delayedCall(350, () => this.resolveMatches(scene, this.ui));
     }
 
     private createGem(scene: Phaser.Scene, row: number, col: number): Gem {
@@ -172,20 +179,20 @@ export default class Board {
         
         for (let col = 0; col < this.cols; col++) {
             for (let row = this.rows - 1; row >= 0; row--) {
-                if (this.grid[row][col] === null) {
+                if (!this.grid[row][col]) {
                     for (let rowAbove = row - 1; rowAbove >= 0; rowAbove--) {
-                        if (this.grid[rowAbove][col] !== null) {
-                            const gem = this.grid[rowAbove][col];
+                        const gem = this.grid[rowAbove]?.[col];
+                        if (gem) {
                             this.grid[row][col] = gem;
                             this.grid[rowAbove][col] = null;
                             gem.row = row;
 
-                            tweens.push(new Promise<void>(resolve => {
+                            tweens.push(new Promise(res => {
                             scene.tweens.add({
                                 targets: gem,
                                 y: this.getY(row),
                                 duration: 200,
-                                onComplete: () => resolve()
+                                onComplete: () => res()
                             });
                             }));
                             break;
@@ -196,7 +203,8 @@ export default class Board {
 
             for (let row = 0; row < this.rows; row++) {
                 if (!this.grid[row][col]) {
-                    const gem = this.createGem(scene, row, col);
+                    const gem = new Gem(scene, this.getX(col), this.getY(row) - this.cellSize * 2,
+                        Phaser.Utils.Array.GetRandom(this.gemTypes), row, col);
                     this.grid[row][col] = gem;
 
                     tweens.push(new Promise(res => {
@@ -224,7 +232,7 @@ export default class Board {
                 ui.scoreText.setText(`Score:${ui.score}`);
             }
 
-            await this.dropGems(scene); // ✅ ждём падения
+            await this.dropGems(scene);
 
             matches = this.findMatches();
         }
