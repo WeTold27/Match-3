@@ -7,7 +7,6 @@ export default class SwapHandler {
     private board: Board;
     private matchChecker: MatchChecker;
     private selected: Gem | null = null;
-    private readonly SCALE_SELECTED = 1.2;
     private readonly TWEEN_DURATION = 200;
     private readonly DELAY_AFTER_DROP = 300;
 
@@ -21,8 +20,9 @@ export default class SwapHandler {
         for (let row = 0; row < this.board.rows; row++) {
             for (let col = 0; col < this.board.cols; col++) {
                 const gem = this.board.grid[row][col];
-                if (!gem) continue;
+                if (!gem || !gem.active || !gem.scene) continue;
                 gem.setInteractive();
+                gem.removeAllListeners();
                 gem.on("pointerdown", () => this.onGemClicked(gem));
             }
         }
@@ -47,6 +47,7 @@ export default class SwapHandler {
 
         this.swapGems(gem, firstGem, () => {
             const matches = this.board.findMatches();
+            
             if (matches.length > 0) {
                 let totalPoints = 0;
                 matches.forEach(group => {

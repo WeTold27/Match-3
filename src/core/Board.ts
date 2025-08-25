@@ -9,14 +9,16 @@ export default class Board {
     grid: (Gem | null)[][];
     private offsetX: number = 0;
     private offsetY: number = 0;
+    private ui: any;
 
-    constructor(rows: number, cols: number, cellSize: number, gemTypes: string[], scene: Phaser.Scene) {
+    constructor(rows: number, cols: number, cellSize: number, gemTypes: string[], scene: Phaser.Scene, ui: any) {
         this.rows = rows;
         this.cols = cols;
         this.cellSize = cellSize;
         this.gemTypes = gemTypes;
         this.scene = scene;
         this.grid = [];
+        this.ui = ui;
     }
 
     enableInput(swapHandler: any) {
@@ -72,12 +74,35 @@ export default class Board {
 
     swapGemPositions(gemA: Gem | null, gemB: Gem | null) {
         if (!gemA || !gemB) return;
+        return new Promise<void>((resolve) => {
+            // меняем местами координаты в grid
+            [gemA.row, gemB.row] = [gemB.row, gemA.row];
+            [gemA.col, gemB.col] = [gemB.col, gemA.col];
 
-        [gemA.row, gemB.row] = [gemB.row, gemA.row];
-        [gemA.col, gemB.col] = [gemB.col, gemA.col];
+            this.grid[gemA.row][gemA.col] = gemA;
+            this.grid[gemB.row][gemB.col] = gemB;
 
-        this.grid[gemA.row][gemA.col] = gemA;
-        this.grid[gemB.row][gemB.col] = gemB;
+            // анимация обмена
+            this.scene.tweens.add({
+                targets: gemA,
+                x: this.getX(gemA.col),
+                y: this.getY(gemA.row),
+                duration: 200,
+                onComplete: () => {
+                    this.scene.tweens.add({
+                        targets: gemB,
+                        x: this.getX(gemB.col),
+                        y: this.getY(gemB.row),
+                        duration: 200,
+                        onComplete: () => {
+                            // теперь только после завершения анимации
+                            this.resolveMatches(this.scene, this.ui);
+                            resolve();
+                        }
+                    });
+                }
+            });
+        });
     }
 
     findMatches(): Gem[][] {
@@ -133,7 +158,6 @@ export default class Board {
             this.grid[gem.row][gem.col] = null;
             gem.destroy();
         }
-
         return points;
     }
     
@@ -170,6 +194,28 @@ export default class Board {
                     
                 }
             }
+        }
+    }
+
+    async resolveMatches(scene: Phaser.Scene, ui: any) {
+        let matches = this.findMatches();
+
+        while (matches.length > 0) {
+            for (const group of matches) {
+                const points = this.removeGems(group);
+                ui.score += points;
+                ui.scoreText.setText(`Score:\n${ui.score}`);
+            }
+
+                // уроним фишки и создадим новые
+                this.dropGems(scene);
+
+            await new Promise(resolve => {
+                scene.time.delayedCall(350, resolve);
+            });
+
+            // ищем новые совпадения
+            matches = this.findMatches();
         }
     }
 }

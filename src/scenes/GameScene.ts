@@ -23,22 +23,21 @@ export default class GameScene extends Phaser.Scene {
 
         const uiWidth = 150;
         
-        this.board = new Board(9, 9, 81, [
+        this.board = new Board(9, 9, 70, [
             "donut", "cracker", "croissant", "cookie", "icecream", "candy", "cake",
             "wrapper", "lollipop", "cupcake", 'star', 'cchups', 'chocolate', 'piececake'
-        ], this);
+        ], this, this.ui);
         
         this.board.create(this);
 
         this.ui.score = 0;
         this.ui.scoreText = this.add.text(
-            this.board.cols * this.board.cellSize + 50, // справа от поля
+            this.board.cols * this.board.cellSize + 20, // справа от поля
            20, // вертикально по центру
-            `Score: \n${this.ui.score}`,
+            `Score: ${this.ui.score}`,
             {
                 fontSize: '24px',
                 color: '#ffffff',
-                align: 'center'
             
             });
         
@@ -60,7 +59,7 @@ export default class GameScene extends Phaser.Scene {
     }
     addScore(points: number) {
         this.ui.score += points;
-        this.ui.scoreText.setText(`Score: \n${this.ui.score}`);
+        this.ui.scoreText.setText(`Score: ${this.ui.score}`);
         // this.ui.totalScoreText.setText(`Total Score:\n${this.ui.totalScore}`);
     }
 }
